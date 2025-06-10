@@ -1,5 +1,10 @@
-import { CreationOptional, InferAttributes, InferCreationAttributes, Model } from "sequelize";
-import sequelize from "./sequelize";
+import {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+  Model,
+} from 'sequelize';
+import sequelize from './sequelize';
 
 
 class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>>{
@@ -14,7 +19,8 @@ class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>
     declare ratingCount?: number;
 }
 
-Hotel.init({
+Hotel.init(
+  {
     id: {
         type: 'INTEGER',
         autoIncrement: true,

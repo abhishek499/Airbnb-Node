@@ -1,4 +1,4 @@
-import { DataTypes, QueryInterface } from "sequelize";
+import { DataTypes, QueryInterface } from 'sequelize';
 
 module.exports = {
   async up (queryInterface:QueryInterface) {
@@ -11,5 +11,5 @@ module.exports = {
 
   async down (queryInterface:QueryInterface) {
     await queryInterface.removeColumn('hotels', 'deleted_at');
-  }
+  },
 };
