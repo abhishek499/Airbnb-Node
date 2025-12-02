@@ -1,17 +1,17 @@
 import logger from '../config/logger.config';
 import Hotel from '../db/models/hotel';
-import { createHotelDTO } from '../dto/hotel.dto';
+import { createHotelDTO, HotelResponseDTO } from '../dto/hotel.dto';
 import { NotFoundError } from '../utils/errors/app.error';
 
-export async function createHotel(hotelData: createHotelDTO) : Promise<createHotelDTO> {
+export async function createHotel(hotelData: createHotelDTO) : Promise<HotelResponseDTO> {
     const hotel = await Hotel.create(hotelData);
 
     logger.info(`Hotel created with ID: ${hotel.id}`);
 
-    return hotel as createHotelDTO;
+    return new HotelResponseDTO(hotel);
 }
 
-export async function getHotelById(id: number) {
+export async function getHotelById(id: number): Promise<HotelResponseDTO> {
     const hotel = await Hotel.findByPk(id);
 
     if(!hotel) {
@@ -21,7 +21,7 @@ export async function getHotelById(id: number) {
     
     logger.info(`Hotel Found: ID: ${hotel.id}, Name: ${hotel.name}`);
 
-    return hotel;
+    return new HotelResponseDTO(hotel);
 }
 
 export async function getAllHotels(orderBy?: string, orderDirection?: 'ASC' | 'DESC', pageSize?: number, pageNumber?: number) { 
@@ -32,6 +32,7 @@ export async function getAllHotels(orderBy?: string, orderDirection?: 'ASC' | 'D
 
     console.log({orderBy, orderDirection, pageSize, pageNumber});
     const hotels = await Hotel.findAll({
+        where: { deletedAt: null },
         order: [orderBy ? [orderBy, orderDirection || 'ASC'] : ['id', 'ASC']],
         offset: pageSize && pageNumber ? (pageNumber - 1) * pageSize : 0,
         limit: pageSize || 10,
@@ -51,4 +52,20 @@ export async function getAllHotels(orderBy?: string, orderDirection?: 'ASC' | 'D
     });
 
     return hotels;
+}
+
+export async function softDeleteHotel(id: number) {
+    const hotel = await Hotel.findByPk(id);
+
+    if(!hotel) {
+        logger.error(`Hotel not found with ID: ${id}`);
+        throw new NotFoundError(`Hotel with ID ${id} not found`);
+    }
+
+    hotel.deletedAt = new Date();
+    await hotel.save();// Save changes to the db
+
+    logger.info(`Hotel soft deleted with ID: ${id}`);
+
+    return hotel;
 }
