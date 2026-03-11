@@ -44,3 +44,25 @@ export class NotFoundError implements AppError {
         this.name = "Not Found";
     }
 }
+
+export class ConflictError implements AppError {
+    statusCode: number;
+    message: string;
+    name: string;
+    constructor(message:string){
+        this.statusCode = 409;
+        this.message = message;
+        this.name = "Conflict Error";
+    }
+}
+
+export class BadRequestError implements AppError {
+    statusCode: number;
+    message: string;
+    name: string;
+    constructor(message:string){
+        this.statusCode = 400;
+        this.message = message;
+        this.name = "Bad Request";
+    }
+}

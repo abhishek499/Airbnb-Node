@@ -104,9 +104,22 @@ exports.Prisma.BookingScalarFieldEnum = {
   totalGuests: 'totalGuests'
 };
 
+exports.Prisma.IdempotencyKeyScalarFieldEnum = {
+  id: 'id',
+  idemKey: 'idemKey',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  finalized: 'finalized',
+  bookingId: 'bookingId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.IdempotencyKeyOrderByRelevanceFieldEnum = {
+  idemKey: 'idemKey'
 };
 exports.BookingStatus = exports.$Enums.BookingStatus = {
   PENDING: 'PENDING',
@@ -115,7 +128,8 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
 };
 
 exports.Prisma.ModelName = {
-  Booking: 'Booking'
+  Booking: 'Booking',
+  IdempotencyKey: 'IdempotencyKey'
 };
 /**
  * Create the Client
@@ -125,10 +139,10 @@ const config = {
   "clientVersion": "7.0.1",
   "engineVersion": "f09f2815f091dbba658cdcd2264306d88bb5bda6",
   "activeProvider": "mysql",
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"mysql\"\n}\n\nmodel Booking {\n  id            Int           @id @default(autoincrement())\n  userId        Int\n  hotelId       Int\n  createdAt     DateTime      @default(now())\n  updatedAt     DateTime      @updatedAt\n  bookingAmount Int\n  status        BookingStatus\n  totalGuests   Int\n}\n\nenum BookingStatus {\n  PENDING\n  CONFIRMED\n  CANCELLED\n}\n"
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n  // moduleFormat = \"cjs\"\n}\n\ndatasource db {\n  provider = \"mysql\"\n}\n\nmodel Booking {\n  id             Int             @id @default(autoincrement())\n  userId         Int\n  hotelId        Int\n  createdAt      DateTime        @default(now())\n  updatedAt      DateTime        @updatedAt\n  bookingAmount  Int\n  status         BookingStatus   @default(PENDING)\n  totalGuests    Int\n  idempotencyKey IdempotencyKey?\n}\n\nmodel IdempotencyKey {\n  id        Int      @id @default(autoincrement())\n  idemKey   String   @unique\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  finalized Boolean  @default(false)\n  bookingId Int      @unique\n  booking   Booking? @relation(fields: [bookingId], references: [id])\n}\n\nenum BookingStatus {\n  PENDING\n  CONFIRMED\n  CANCELLED\n}\n"
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"Booking\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"hotelId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"bookingAmount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"BookingStatus\"},{\"name\":\"totalGuests\",\"kind\":\"scalar\",\"type\":\"Int\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Booking\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"hotelId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"bookingAmount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"status\",\"kind\":\"enum\",\"type\":\"BookingStatus\"},{\"name\":\"totalGuests\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"idempotencyKey\",\"kind\":\"object\",\"type\":\"IdempotencyKey\",\"relationName\":\"BookingToIdempotencyKey\"}],\"dbName\":null},\"IdempotencyKey\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"idemKey\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"finalized\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"bookingId\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"booking\",\"kind\":\"object\",\"type\":\"Booking\",\"relationName\":\"BookingToIdempotencyKey\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.compilerWasm = {
       getRuntime: async () => require('./query_compiler_bg.js'),

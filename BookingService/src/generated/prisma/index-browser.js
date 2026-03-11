@@ -131,9 +131,22 @@ exports.Prisma.BookingScalarFieldEnum = {
   totalGuests: 'totalGuests'
 };
 
+exports.Prisma.IdempotencyKeyScalarFieldEnum = {
+  id: 'id',
+  idemKey: 'idemKey',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  finalized: 'finalized',
+  bookingId: 'bookingId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.IdempotencyKeyOrderByRelevanceFieldEnum = {
+  idemKey: 'idemKey'
 };
 exports.BookingStatus = exports.$Enums.BookingStatus = {
   PENDING: 'PENDING',
@@ -142,7 +155,8 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
 };
 
 exports.Prisma.ModelName = {
-  Booking: 'Booking'
+  Booking: 'Booking',
+  IdempotencyKey: 'IdempotencyKey'
 };
 
 /**

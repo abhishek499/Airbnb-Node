@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { ZodObject } from "zod";
+import { ZodError, ZodObject } from "zod";
 import logger from "../config/logger.config";
 
 
@@ -15,13 +15,13 @@ export const validateRequestBody = (schema: ZodObject) => {
             await schema.parseAsync(req.body);
             logger.info("Request body is valid.");
             next();
-        } catch (error) {
+        } catch (error: any) {
             // next(error);
             logger.error("Request body validation failed.");
             return res.status(400).json({
                 message: 'Invalid request body',
                 success: false,
-                error: error
+                error: error.issues
             });
         }
     }
@@ -40,12 +40,12 @@ export const validateQueryParams = (schema: ZodObject) => {
             await schema.parseAsync(req.query);
             console.log("Request body is valid.");
             next();
-        } catch (error) {
-            next(error);
+        } catch (error: any) {
+            // next(error);
             return res.status(400).json({
                 message: 'Invalid request body',
                 success: false,
-                error: error
+                error: error.issues
             });
         }
     }
