@@ -1,19 +1,39 @@
 import Redis from 'ioredis';
-import Client from "ioredis";
 import Redlock from "redlock";
 import { serverConfig } from '.';
 
-export const redisClient = new Redis(serverConfig.REDIS_SERVER_URL);
+// export const redisClient = new Redis(serverConfig.REDIS_SERVER_URL);
+
+function connectToRedis() {
+    try {
+        let connection: Redis;
+
+
+        return (): Redis => {
+            if (!connection) {
+                connection = new Redis(serverConfig.REDIS_SERVER_URL);
+                console.log('Connected to Redis successfully.');
+            }
+
+            return connection;
+        }
+    } catch (error) {
+        console.error("Error connecting to Redis:", error);
+        throw error;
+    }
+}
+
+export const getRedisConnObject = connectToRedis();
 
 // attach basic event handlers
-redisClient.on('connect', () => {
+getRedisConnObject().on('connect', () => {
   console.info('Redis client connected');
 });
-redisClient.on('error', (err) => {
+getRedisConnObject().on('error', (err) => {
   console.error('Redis client error', err);
 });
 
-export const redlock = new Redlock([redisClient as any], {
+export const redlock = new Redlock([getRedisConnObject() as any], {
   driftFactor: 0.01, // time in ms
   retryCount: 10,
   retryDelay: 200, // time in ms
