@@ -1,71 +1,93 @@
 import logger from '../config/logger.config';
 import Hotel from '../db/models/hotel';
-import { createHotelDTO, HotelResponseDTO } from '../dto/hotel.dto';
+import { HotelListQueryDTO, HotelResponseDTO, PaginatedResult } from '../dto/hotel.dto';
 import { NotFoundError } from '../utils/errors/app.error';
+import BaseRepository from './base.repository';
 
-export async function createHotel(hotelData: createHotelDTO) : Promise<HotelResponseDTO> {
-    const hotel = await Hotel.create(hotelData);
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 10;
 
-    logger.info(`Hotel created with ID: ${hotel.id}`);
+const ALLOWED_SORT_FIELDS: Record<string, string> = {
+    id: "id",
+    name: "name",
+    createdAt: "createdAt",
+    rating: "rating",
+    ratingCount: "ratingCount",
+};
 
-    return new HotelResponseDTO(hotel);
-}
+export class HotelRepository extends BaseRepository<Hotel> {
 
-export async function getHotelById(id: number): Promise<HotelResponseDTO> {
-    const hotel = await Hotel.findByPk(id);
-
-    if(!hotel) {
-        logger.error(`Hotel not found with ID: ${id}`);
-        throw new NotFoundError(`Hotel with ID ${id} not found`);
-    }
-    
-    logger.info(`Hotel Found: ID: ${hotel.id}, Name: ${hotel.name}`);
-
-    return new HotelResponseDTO(hotel);
-}
-
-export async function getAllHotels(orderBy?: string, orderDirection?: 'ASC' | 'DESC', pageSize?: number, pageNumber?: number) { 
-    //1. Fetch all hotels in the db with pagination
-    /**
-     * pageSize, pageNumber, orderBy, orderDirection
-     */
-
-    console.log({orderBy, orderDirection, pageSize, pageNumber});
-    const hotels = await Hotel.findAll({
-        where: { deletedAt: null },
-        order: [orderBy ? [orderBy, orderDirection || 'ASC'] : ['id', 'ASC']],
-        offset: pageSize && pageNumber ? (pageNumber - 1) * pageSize : 0,
-        limit: pageSize || 10,
-    });
-
-
-    if(hotels.length === 0) {
-        logger.error('No hotels found in the database');
-        throw new NotFoundError('No hotels found');
+    constructor() {
+        super(Hotel, (hotel) => new HotelResponseDTO(hotel));
     }
 
-    logger.info(`Fetched ${hotels.length} hotels from the database with pagination details`, {
-        orderBy,
-        orderDirection,
-        pageSize,
-        pageNumber
-    });
+    async findAll(): Promise<Hotel[] | []> {
+        const hotels = await this.model.findAll({
+            where: {
+                deletedAt: null
+            }
+        });
 
-    return hotels;
-}
+        if (!hotels || hotels.length === 0) {
+            logger.error('No hotels found in the database');
+            throw new NotFoundError('No hotels found');
+        }
 
-export async function softDeleteHotel(id: number) {
-    const hotel = await Hotel.findByPk(id);
+        logger.info(`Fetched ${hotels.length} hotels from the database`);
 
-    if(!hotel) {
-        logger.error(`Hotel not found with ID: ${id}`);
-        throw new NotFoundError(`Hotel with ID ${id} not found`);
+        return hotels;
     }
 
-    hotel.deletedAt = new Date();
-    await hotel.save();// Save changes to the db
+    async softDeleteById(id: number): Promise<boolean> {
+        const hotel = await this.model.findByPk(id);
 
-    logger.info(`Hotel soft deleted with ID: ${id}`);
+        if (!hotel) {
+            logger.error(`Hotel not found with ID: ${id}`);
+            throw new NotFoundError(`Hotel with ID ${id} not found`);
+        }
 
-    return hotel;
+        hotel.deletedAt = new Date();
+        await hotel.save();// Save changes to the db
+
+        logger.info(`Hotel soft deleted with ID: ${id}`);
+
+        return true;
+    }
+
+    async findManyActive(query: HotelListQueryDTO = {}): Promise<PaginatedResult<Hotel>> {
+        const page = query.page && query.page > 0 ? query.page : DEFAULT_PAGE;
+        const pageSize =
+            query.pageSize && query.pageSize > 0 ? query.pageSize : DEFAULT_PAGE_SIZE;
+
+        const sortBy = query.sortBy && ALLOWED_SORT_FIELDS[query.sortBy]
+            ? query.sortBy
+            : "id";
+
+        const sortDirection = query.sortDirection ?? "ASC";
+
+        const where = query.includeDeleted ? {} : { deletedAt: null };
+
+        const { rows, count } = await this.findAndCount({
+            where,
+            order: [[sortBy, sortDirection]],
+            offset: (page - 1) * pageSize,
+            limit: pageSize,
+        });
+
+        logger.info("Fetched hotels from database", {
+            total: count,
+            page,
+            pageSize,
+            sortBy,
+            sortDirection,
+            includeDeleted: query.includeDeleted ?? false,
+        });
+
+        return {
+            data: rows,
+            total: count,
+            page,
+            pageSize,
+        };
+    }
 }

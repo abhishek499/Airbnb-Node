@@ -51,6 +51,10 @@ Room.init(
       type: 'INTEGER',
       allowNull: false,
     },
+    bookingId: {
+      type: 'INTEGER',
+      defaultValue: null,
+    },
     createdAt: {
       type: 'DATE',
       defaultValue: new Date(),
@@ -61,10 +65,6 @@ Room.init(
     },
     deletedAt: {
       type: 'DATE',
-      defaultValue: null,
-    },
-    bookingId: {
-      type: 'INTEGER',
       defaultValue: null,
     },
   },

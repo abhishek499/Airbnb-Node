@@ -8,6 +8,24 @@ export type createHotelDTO = {
     ratingCount?: number;
 }
 
+export type HotelSortBy = "id" | "name" | "createdAt" | "rating" | "ratingCount";
+export type SortDirection = "ASC" | "DESC";
+
+export type HotelListQueryDTO = {
+  page?: number;
+  pageSize?: number;
+  sortBy?: HotelSortBy;
+  sortDirection?: SortDirection;
+  includeDeleted?: boolean;
+};
+
+export type PaginatedResult<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 export class HotelResponseDTO {
     name: string;
     address: string;
